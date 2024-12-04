@@ -52,32 +52,37 @@ void uv_callback_release(uv_callback_t *callback);
 
 /* Structures */
 
-struct uv_callback_s {
-   uv_async_t async;          /* base async handle used for thread signal */
-   void *data;                /* additional data pointer. not the same from the handle */
-   int usequeue;              /* if this callback uses a queue of calls */
-   uv_call_t *queue;          /* queue of calls to this callback */
-   uv_mutex_t mutex;          /* mutex used to access the queue */
-   uv_callback_func function; /* the function to be called */
-   void *arg;                 /* data argument for coalescing calls (when not using queue) */
-   uv_idle_t idle;            /* idle handle used to drain the queue if new async request was sent while an old one was being processed */
-   int idle_active;           /* flags if the idle handle is active */
-   uv_callback_t *master;     /* master callback handle, the one with the valid uv_async handle */
-   uv_callback_t *next;       /* the next callback from this uv_async handle */
-   int inactive;              /* this callback is no more valid. the called thread should not fire the response callback */
-   int refcount;              /* reference counter */
-   void (*free_cb)(void*);    /* function to release this object */
-   void (*free_result)(void*);/* function to release the result of the call if not used */
+/* 异步回调事件管理器 */
+struct uv_callback_s 
+{
+   uv_async_t async;          /* 用于线程信号的基础异步句柄 */
+   void *data;                /* 附加数据指针，与句柄中的数据不同 */
+   int usequeue;              /* 如果此回调使用调用队列 */
+   uv_call_t *queue;          /* 对此回调的调用队列 */
+   uv_mutex_t mutex;          /* 用于访问队列的互斥锁 */
+   uv_callback_func function; /* 要调用的函数 */
+   void *arg;                 /* 合并调用时的数据参数（不使用队列时） */
+   uv_idle_t idle;            /* 空闲句柄，用于在处理旧的异步请求时排空队列 */
+   int idle_active;           /* 空闲句柄是否激活的标志 */
+   uv_callback_t *master;     /* 主回调句柄，具有有效 uv_async 句柄的那个 */
+   uv_callback_t *next;       /* 此 uv_async 句柄的下一个回调 */
+   int inactive;              /* 此回调不再有效，被调用的线程不应触发响应回调 */
+   int refcount;              /* 引用计数器 */
+   void (*free_cb)(void*);    /* 释放此对象的函数 */
+   void (*free_result)(void*);/* 释放未使用的调用结果的函数 */
 };
 
-struct uv_call_s {
-   uv_call_t *next;           /* pointer to the next call in the queue */
-   uv_callback_t *callback;   /* callback linked to this call */
-   void *data;                /* data argument for this call */
-   int   size;                /* size argument for this call */
-   void (*free_data)(void*);  /* function to release the data if the call is not fired */
-   uv_callback_t *notify;     /* callback to be fired with the result of this one */
+/* 异步回调事件队列管理器 */
+struct uv_call_s 
+{
+   uv_call_t *next;           /* 指向下一个队列中的调用的指针 */
+   uv_callback_t *callback;   /* 与此调用关联的回调 */
+   void *data;                /* 此调用的数据参数 */
+   int   size;                /* 此调用的大小参数 */
+   void (*free_data)(void*);  /* 如果调用未触发，释放数据的函数 */
+   uv_callback_t *notify;     /* 将与此调用的结果一起触发的回调 */
 };
+
 
 
 #ifdef __cplusplus
